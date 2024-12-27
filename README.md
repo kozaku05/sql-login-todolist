@@ -1,6 +1,13 @@
 # sql-login-todolist
 テーブル users
 ```
+    create table users(
+    id int auto_increment primary key,
+    email varchar(100) unique,
+    password varchar(100) not null
+    );
+```
+```
 +----------+--------------+------+-----+---------+----------------+
 | Field    | Type         | Null | Key | Default | Extra          |
 +----------+--------------+------+-----+---------+----------------+
@@ -10,6 +17,13 @@
 +----------+--------------+------+-----+---------+----------------+
 ```
 テーブルtodos
+```
+create table todos(
+    user_id int not null,
+    order int not null,
+    value text not null,
+    );
+```
 ```
 +------------+------+------+-----+---------+-------+
 | Field      | Type | Null | Key | Default | Extra |
