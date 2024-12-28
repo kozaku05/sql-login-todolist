@@ -62,6 +62,11 @@ function load(todo) {
           },
           body: JSON.stringify({ checkboxId }),
         }).then((res) => {
+          if (!res.ok) {
+            alert("Error");
+            location.href = "/";
+            return;
+          }
           getTodo();
         });
       }
@@ -84,6 +89,7 @@ function addTodo() {
   }).then((res) => {
     if (!res.ok) {
       alert("Error");
+      location.href = "/";
       return;
     }
     getTodo();

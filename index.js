@@ -53,17 +53,16 @@ app.post(
     }
     const { email, password } = req.body;
     const hashedPassword = bcrypt.hashSync(password, 10);
-    const sql = "SELECT * FROM users WHERE email = ?";
+    let sql = "SELECT * FROM users WHERE email = ?";
     connection.query(sql, [email], (err, results) => {
       if (err) {
         return res.status(500).send("sql error");
       }
-      console.log(results.length);
       if (results.length > 0) {
         return res.status(400).json({ err: "重複するメアド" });
       }
-      const sql2 = "INSERT INTO users (email, password) VALUES (?, ?)";
-      connection.query(sql2, [email, hashedPassword], (err, results) => {
+      sql = "INSERT INTO users (email, password) VALUES (?, ?)";
+      connection.query(sql, [email, hashedPassword], (err, results) => {
         if (err) {
           return res.status(500).send("sql error");
         }
@@ -89,9 +88,9 @@ app.post(
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.status(400);
+    return res.status(400).send("null email or password");
   }
-  const sql = "SELECT password FROM users WHERE email = (?)";
+  let sql = "SELECT password FROM users WHERE email = (?)";
   connection.query(sql, [email], (err, results) => {
     if (err) {
       return res.status(500).send("sql error");
@@ -133,13 +132,13 @@ app.get("/jwt", (req, res) => {
         return res.status(500).send("sql error");
       }
       if (results.length === 0) {
-        res.clearCookie("yourCookieName", { httpOnly: true });
+        res.clearCookie("user", { httpOnly: true });
         return res.status(401).send("not match");
       }
       res.status(200).json({ user: results });
     });
   } catch (err) {
-    res.clearCookie("yourCookieName", { httpOnly: true });
+    res.clearCookie("user", { httpOnly: true });
     return res.status(500).send("jwt error");
   }
 });
@@ -148,28 +147,34 @@ app.get("/logout", (req, res) => {
   res.clearCookie("user", { httpOnly: true });
   res.status(200).send("logout success");
 });
+//todoリストの所得
 app.get("/todo", (req, res) => {
   const token = req.cookies.user;
   if (!token) {
     return res.status(401).send("null token");
   }
   const payload = jwt.verify(token, SECRET);
-  const sql = "SELECT id FROM users WHERE email = ?";
+  let sql = "SELECT id FROM users WHERE email = ?";
   connection.query(sql, [payload.email], (err, id) => {
     if (err) {
       return res.status(500).send("sql error");
     }
     id = id[0].id;
-    const sql2 = "SELECT * FROM todos WHERE user_id = ?";
-    connection.query(sql2, [id], (err, todo) => {
+    if (!id) {
+      res.clearCookie("user", { httpOnly: true });
+      return res.status(401).send("not match");
+    }
+    sql = "SELECT * FROM todos WHERE user_id = ?";
+    connection.query(sql, [id], (err, todo) => {
       if (err) {
         return res.status(500).send("sql error");
       }
-      console.log(todo);
       res.status(200).json(todo);
     });
   });
 });
+
+// todoの追加
 app.post("/add", (req, res) => {
   const token = req.cookies.user;
   if (!token) {
@@ -185,6 +190,10 @@ app.post("/add", (req, res) => {
       return res.status(500).send("sql error");
     }
     id = id[0].id;
+    if (!id) {
+      res.clearCookie("user", { httpOnly: true });
+      return res.status(401).send("not match");
+    }
     sql = "select user_order from todos where user_id = ?";
     connection.query(sql, [id], (err, result) => {
       if (err) {
@@ -192,7 +201,9 @@ app.post("/add", (req, res) => {
       }
       const order = result.length + 1;
       const { input } = req.body;
-      console.log(input);
+      if (!input) {
+        return res.status(400).send("null todo");
+      }
       sql = "INSERT INTO todos (user_id, user_order,value) VALUES (?,?,?)";
       connection.query(sql, [id, order, input], (err, result) => {
         if (err) {
@@ -203,6 +214,7 @@ app.post("/add", (req, res) => {
     });
   });
 });
+//todoの削除
 app.post("/delete", (req, res) => {
   const token = req.cookies.user;
   if (!token) {
@@ -215,6 +227,10 @@ app.post("/delete", (req, res) => {
       return res.status(500).send("sql error");
     }
     id = id[0].id;
+    if (!id) {
+      res.clearCookie("user", { httpOnly: true });
+      return res.status(401).send("not match");
+    }
     const { checkboxId } = req.body;
     sql = "DELETE FROM todos WHERE user_id =? AND user_order =?";
     connection.query(sql, [id, checkboxId], (err, result) => {
@@ -225,6 +241,7 @@ app.post("/delete", (req, res) => {
     });
   });
 });
+//サーバーの起動
 app.listen(port, () => {
   console.log(`http://localhost:${port}/`);
 });

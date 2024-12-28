@@ -22,8 +22,15 @@ function login() {
     .then((res) => {
       if (res.ok) {
         location.href = "/todolist";
+        return;
       } else {
         form.style.display = "block";
+        return res.text();
+      }
+    })
+    .then((data) => {
+      if (data) {
+        alert(data);
       }
     })
     .catch(() => {
