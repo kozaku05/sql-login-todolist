@@ -1,11 +1,12 @@
 # sql-login-todolist
 テーブル users
 ```
-    create table users(
+CREATE TABLE users(
     id int auto_increment primary key,
-    email varchar(100) unique,
+    email varchar(50) unique,
     password varchar(100) not null
-    );
+);
+
 ```
 ```
 +----------+--------------+------+-----+---------+----------------+
@@ -20,8 +21,8 @@
 ```
 create table todos(
     user_id int not null,
-    order int not null,
-    value text not null,
+    user_order int not null,
+    value text not null
     );
 ```
 ```
