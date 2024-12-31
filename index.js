@@ -16,7 +16,7 @@ const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "root",
-  database: "sqllogintodo",
+  database: "todolist",
 });
 connection.connect((err) => {
   if (err) {
@@ -173,7 +173,6 @@ app.get("/todo", (req, res) => {
     });
   });
 });
-
 // todoの追加
 app.post("/add", (req, res) => {
   const token = req.cookies.user;
@@ -189,8 +188,9 @@ app.post("/add", (req, res) => {
     if (err) {
       return res.status(500).send("sql error");
     }
-    id = id[0].id;
-    if (!id) {
+    try {
+      id = id[0].id;
+    } catch (error) {
       res.clearCookie("user", { httpOnly: true });
       return res.status(401).send("not match");
     }
@@ -226,8 +226,9 @@ app.post("/delete", (req, res) => {
     if (err) {
       return res.status(500).send("sql error");
     }
-    id = id[0].id;
-    if (!id) {
+    try {
+      id = id[0].id;
+    } catch (error) {
       res.clearCookie("user", { httpOnly: true });
       return res.status(401).send("not match");
     }
